@@ -237,7 +237,7 @@ with tab_img:
         img_file = st.file_uploader("Drag & drop", type=["jpg", "jpeg", "png", "bmp"],
                                       key="img_upload")
         if img_file:
-            st.image(Image.open(img_file), use_column_width=True)
+            st.image(Image.open(img_file), width="stretch")
             img_file.seek(0)
     with col_res:
         st.markdown('<div class="sec-hdr">Detection</div>', unsafe_allow_html=True)
@@ -252,7 +252,7 @@ with tab_img:
                     elapsed_ms = (time.perf_counter() - t0) * 1000
                 st.session_state.proc_ms.append(elapsed_ms)
                 rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                st.image(rgb, use_column_width=True)
+                st.image(rgb, width="stretch")
                 if found:
                     st.success(f"Found **{len(found)}** plate(s) in **{elapsed_ms:.0f}ms**")
                     for det in found:
@@ -304,7 +304,7 @@ with tab_vid:
                                       unsafe_allow_html=True)
                     _log_detection(det, "video", f"Frame {frame_idx}")
             preview.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB",
-                         use_column_width=True)
+                         width="stretch")
             prog = min(frame_idx / total_frames, 1.0)
             prog_bar.progress(prog, text=f"Frame {frame_idx}/{total_frames}")
         elapsed_ms = (time.perf_counter() - t0) * 1000

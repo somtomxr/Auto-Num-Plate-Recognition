@@ -19,12 +19,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Image Recognition",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 
 dependencies = [
     "ultralytics>=8.0.0",
@@ -32,9 +31,9 @@ dependencies = [
     "torchvision>=0.15.0",
     "easyocr>=1.7.0",
     "pytesseract>=0.3.10",
-    "opencv-python-headless>=4.8.0",
-    "numpy>=1.24.0",
-    "streamlit>=1.28.0",
+    "opencv-python-headless==4.10.0.84",
+    "numpy==1.26.4",
+    "streamlit==1.41.1",
     "Pillow>=10.0.0",
     "pandas>=2.0.0",
     "plotly>=5.18.0",
