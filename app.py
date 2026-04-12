@@ -193,7 +193,7 @@ with st.sidebar:
     iou_thresh = st.slider("IoU Threshold", 0.10, 0.90, 0.45, 0.05)
     st.markdown("**OCR Options**")
     strict_val = st.toggle("Strict Indian Format", value=True)
-    use_tess = st.toggle("Tesseract Fallback", value=True)
+    use_tess = False  # Tesseract disabled on cloud (Debian Bookworm package conflict)
     show_raw = st.toggle("Show Raw OCR", value=False)
     st.divider()
     _log = st.session_state.log

@@ -8,7 +8,7 @@ torchvision>=0.15.0
 
 # OCR Engines
 easyocr>=1.7.0
-pytesseract>=0.3.10
+# pytesseract not used on Streamlit Cloud (tesseract-ocr conflicts on Debian Bookworm)
 
 # Computer Vision & Numeric
 opencv-python-headless==4.10.0.84
