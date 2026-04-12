@@ -312,12 +312,12 @@ This project is licensed under the **MIT License** – see [LICENSE](LICENSE) fo
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Devs
 
-Developed for Indian Automatic Number Plate Recognition research & deployment.
-###Som tomar
-###Chetna deshmukh
-###Taniya nanwani
+
+- Som tomar
+- Chetna deshmukh
+- Taniya nanwani
 
 ---
 
