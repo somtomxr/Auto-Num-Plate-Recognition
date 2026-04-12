@@ -1,0 +1,66 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+.venv-1/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+
+# ML Models & Data
+*.pt
+*.pth
+*.onnx
+*.h5
+*.pb
+runs/
+datasets/
+sample_images/
+test_images/
+output_videos/
+
+# Streamlit
+.streamlit/secrets.toml
+.streamlit/cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build & Distribution
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Temporary
+*.tmp
+*.temp
+.env.local
+local_config.py

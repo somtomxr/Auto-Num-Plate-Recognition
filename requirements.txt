@@ -1,0 +1,25 @@
+# Indian ANPR System – Dependencies
+# Python 3.10+, tested on macOS, Linux, Windows
+
+# Core ML & Detection
+ultralytics>=8.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# OCR Engines
+easyocr>=1.7.0
+pytesseract>=0.3.10
+
+# Computer Vision & Numeric
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+
+# Web App & UI
+streamlit>=1.28.0
+Pillow>=10.0.0
+pandas>=2.0.0
+plotly>=5.18.0
+
+# Optional (for enhanced performance)
+# torch-cuda  # Uncomment for GPU support
+# pyarrow>=10.0.0  # For faster CSV export

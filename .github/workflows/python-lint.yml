@@ -1,0 +1,45 @@
+name: Python Lint & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install black flake8 mypy pytest
+
+    - name: Format check (black)
+      run: black --check ocr_engine.py plate_utils.py app.py
+
+    - name: Lint (flake8)
+      run: |
+        flake8 ocr_engine.py plate_utils.py app.py \
+          --max-line-length=100 \
+          --extend-ignore=E203,W503
+
+    - name: Type check (mypy)
+      run: mypy ocr_engine.py plate_utils.py
+      continue-on-error: true
+
+    - name: Run tests
+      run: pytest tests/ -v
+      continue-on-error: true

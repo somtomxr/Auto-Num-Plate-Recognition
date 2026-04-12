@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "indian-anpr"
+version = "1.2.0"
+description = "Automatic Number Plate Recognition system for Indian vehicles using YOLOv11 + EasyOCR"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "ANPR Contributors", email = "team@anpr-india.dev"}
+]
+keywords = ["anpr", "license-plate", "ocr", "yolo", "india", "vehicle"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+requires-python = ">=3.10"
+
+dependencies = [
+    "ultralytics>=8.0.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "easyocr>=1.7.0",
+    "pytesseract>=0.3.10",
+    "opencv-python-headless>=4.8.0",
+    "numpy>=1.24.0",
+    "streamlit>=1.28.0",
+    "Pillow>=10.0.0",
+    "pandas>=2.0.0",
+    "plotly>=5.18.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+]
+gpu = ["torch-cuda"]
+
+[project.urls]
+Homepage = "https://github.com/your-org/indian-anpr"
+Documentation = "https://github.com/your-org/indian-anpr#readme"
+Repository = "https://github.com/your-org/indian-anpr.git"
+Issues = "https://github.com/your-org/indian-anpr/issues"
+
+[tool.setuptools]
+packages = ["License-Plate-Recognition-app"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.10"
+disallow_untyped_defs = false
+warn_return_any = true
+warn_unused_configs = true
