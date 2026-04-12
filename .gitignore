@@ -24,7 +24,7 @@ pip-delete-this-directory.txt
 *.sublime-workspace
 
 # ML Models & Data
-*.pt
+# best.pt is intentionally tracked (18 MB, needed for Streamlit Cloud)
 *.pth
 *.onnx
 *.h5
