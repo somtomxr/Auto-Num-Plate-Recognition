@@ -315,9 +315,9 @@ This project is licensed under the **MIT License** – see [LICENSE](LICENSE) fo
 ## 👨‍💻 Author
 
 Developed for Indian Automatic Number Plate Recognition research & deployment.
-Som tomar
-Chetna deshmukh
-Taniya nanwani
+###Som tomar
+###Chetna deshmukh
+###Taniya nanwani
 
 ---
 
@@ -345,3 +345,4 @@ For issues or questions:
 
 **Last Updated**: April 2026  
 **Status**: ✅ Production Ready
+Built with ❤️ using Python, OpenCV, YOLOv11n, EasyOCR, and Streamlit
