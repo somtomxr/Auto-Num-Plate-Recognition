@@ -205,20 +205,6 @@ with st.sidebar:
     show_raw = st.toggle("Show Raw OCR", value=False,
                          help="Shows the uncleaned text from the OCR engine before Python fixes it.")
     st.divider()
-    _log = st.session_state.log
-    _n = len(_log)
-    _nv = sum(1 for d in _log if d.get("valid"))
-    _n2l = sum(1 for d in _log if d.get("two_line"))
-    _ac = float(np.mean([d["confidence"] for d in _log]) * 100) if _log else 0.0
-    _ams = float(np.mean(st.session_state.proc_ms)) if st.session_state.proc_ms else 0.0
-    st.markdown("### 📊 Stats")
-    c1, c2 = st.columns(2)
-    c1.metric("Total", _n)
-    c2.metric("Valid", _nv)
-    c1.metric("2-Line", _n2l)
-    c2.metric("Avg Conf", f"{_ac:.1f}%")
-    st.metric("Avg Time", f"{_ams:.0f}ms")
-    st.divider()
     if st.button("🗑️ Clear Log", use_container_width=True, type="secondary"):
         st.session_state.log.clear()
         st.session_state.proc_ms.clear()
@@ -240,40 +226,70 @@ st.divider()
 tab_img, tab_vid = st.tabs(["📷 Image", "🎬 Video"])
 
 with tab_img:
-    img_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload")
+    col_left, col_right = st.columns([1.5, 1], gap="large")
     
-    if img_file:
-        # Create a placeholder so we can swap the image after detection
-        image_placeholder = st.empty()
+    with col_left:
+        st.markdown('<div class="sec-hdr">Input Image</div>', unsafe_allow_html=True)
+        img_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload")
         
-        # Show the original image first
-        image_placeholder.image(Image.open(img_file), use_container_width=True)
-        img_file.seek(0)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Center the detect button nicely
-        _, btn_col, _ = st.columns([1, 2, 1])
-        with btn_col:
-            detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
+        if img_file:
+            # Placeholder for swapping image
+            image_placeholder = st.empty()
+            image_placeholder.image(Image.open(img_file), use_container_width=True)
+            img_file.seek(0)
             
-        if detect_clicked:
-            raw_bytes = img_file.read()
-            bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
+            st.markdown("<br>", unsafe_allow_html=True)
+            _, btn_col, _ = st.columns([1, 2, 1])
+            with btn_col:
+                detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
+        else:
+            detect_clicked = False
             
+    with col_right:
+        st.markdown('<div class="sec-hdr">Detection Results</div>', unsafe_allow_html=True)
+        res_placeholder = st.container()
+        
+        st.markdown('<div class="sec-hdr" style="margin-top:30px;">Session Stats</div>', unsafe_allow_html=True)
+        stats_placeholder = st.empty()
+        
+    def render_stats():
+        _log = st.session_state.log
+        if not _log:
+            stats_placeholder.info("No plates logged yet. Run a detection to see stats.")
+            return
+        _n = len(_log)
+        _nv = sum(1 for d in _log if d.get("valid"))
+        _ac = float(np.mean([d["confidence"] for d in _log]) * 100)
+        _ams = float(np.mean(st.session_state.proc_ms)) if st.session_state.proc_ms else 0.0
+        
+        with stats_placeholder.container():
+            c1, c2 = st.columns(2)
+            c1.metric("Total Plates", _n)
+            c2.metric("Valid Format", _nv)
+            c1.metric("Avg Confidence", f"{_ac:.1f}%")
+            c2.metric("Avg Processing", f"{_ams:.0f}ms")
+
+    # Initial render of the stats box
+    render_stats()
+            
+    if img_file and detect_clicked:
+        raw_bytes = img_file.read()
+        bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
+        
+        with col_left:
             with st.spinner("Detecting and Reading Plate..."):
                 t0 = time.perf_counter()
                 annotated, found = detect_on_frame(bgr, yolo_conf, iou_thresh, strict_val, use_tess)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
                 
-            st.session_state.proc_ms.append(elapsed_ms)
-            rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-            
-            # 🚀 SWAP the image: Replace the original with the scanned/annotated one
-            image_placeholder.image(rgb, use_container_width=True)
-            
-            st.divider()
-            
+        st.session_state.proc_ms.append(elapsed_ms)
+        rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+        
+        # 🚀 SWAP the image: Replace the original with the scanned/annotated one
+        image_placeholder.image(rgb, use_container_width=True)
+        
+        # Fill results in the right column
+        with res_placeholder:
             if found:
                 st.success(f"Found **{len(found)}** plate(s) in **{elapsed_ms:.0f}ms**")
                 for det in found:
@@ -283,8 +299,9 @@ with tab_img:
                     _log_detection(det, "image", datetime.now().strftime("%H:%M:%S"))
             else:
                 st.warning("No plates found in this image. Try lowering the Detection Confidence in settings.")
-    else:
-        st.info("Upload an image to begin.")
+                
+        # Instantly update stats after detection
+        render_stats()
 
 with tab_vid:
     st.markdown('<div class="sec-hdr">Input Video</div>', unsafe_allow_html=True)
