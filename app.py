@@ -51,6 +51,10 @@ st.markdown(
         overflow: hidden;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
     }
+    [data-testid="stImage"] img {
+        max-height: 500px;
+        object-fit: contain;
+    }
     [data-testid="stAlert"] {
         border-radius: 10px;
         border: 1px solid #30363d;
@@ -189,12 +193,17 @@ def _plate_html(
 with st.sidebar:
     st.markdown("<h2 style='color:#58a6ff;'>⚙️ Settings</h2>", unsafe_allow_html=True)
     st.divider()
-    yolo_conf = st.slider("Detection Confidence", 0.10, 0.90, 0.20, 0.05)
-    iou_thresh = st.slider("IoU Threshold", 0.10, 0.90, 0.45, 0.05)
+    yolo_conf = st.slider("Detection Confidence", 0.10, 0.90, 0.25, 0.05,
+                          help="Higher values prevent false positives (like bumpers) but may miss blurry plates.")
+    iou_thresh = st.slider("IoU Threshold", 0.10, 0.90, 0.45, 0.05,
+                           help="Prevents duplicate boxes on the same plate. 0.45 is the research standard.")
     st.markdown("**OCR Options**")
-    strict_val = st.toggle("Strict Indian Format", value=True)
-    use_tess = False  # Tesseract disabled on cloud (Debian Bookworm package conflict)
-    show_raw = st.toggle("Show Raw OCR", value=False)
+    use_tess = st.toggle("Dual Engine (EasyOCR + Tesseract)", value=True,
+                         help="Runs two engines for higher accuracy, but takes 2x longer.")
+    strict_val = st.toggle("Strict Indian Format", value=True,
+                           help="Hides results that do not mathematically match Indian plate rules.")
+    show_raw = st.toggle("Show Raw OCR", value=False,
+                         help="Shows the uncleaned text from the OCR engine before Python fixes it.")
     st.divider()
     _log = st.session_state.log
     _n = len(_log)

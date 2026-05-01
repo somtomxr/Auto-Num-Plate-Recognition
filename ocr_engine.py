@@ -33,6 +33,47 @@ def _upscale(img: np.ndarray, min_w: int = 300) -> np.ndarray:
     return cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_CUBIC)
 
 
+def _deskew(img: np.ndarray) -> np.ndarray:
+    """
+    Correct small rotation/skew in a plate crop.
+
+    Indian plates mounted at a slight angle cause OCR to misread characters.
+    This uses the minimum bounding rectangle of white (text) pixels to estimate
+    the skew angle and rotates the image back to horizontal.
+
+    Skew correction is limited to ±15 degrees to avoid flipping upright plates.
+    """
+    # Work on a quick binary version to find text pixel coordinates
+    gray = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    coords = np.column_stack(np.where(binary > 0))
+    if len(coords) < 50:
+        return img  # too few pixels to estimate angle reliably
+
+    # minAreaRect returns ((cx, cy), (w, h), angle)
+    rect = cv2.minAreaRect(coords)
+    angle = rect[-1]
+
+    # minAreaRect angle is in [-90, 0). Convert to signed skew.
+    if angle < -45:
+        angle = 90 + angle  # near-vertical → positive skew
+
+    # Only correct small skews; large angles likely mean a different issue
+    if abs(angle) > 15:
+        return img
+
+    h, w = gray.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    flags = cv2.INTER_CUBIC
+    border = cv2.BORDER_REPLICATE
+
+    if img.ndim == 2:
+        return cv2.warpAffine(img, M, (w, h), flags=flags, borderMode=border)
+    return cv2.warpAffine(img, M, (w, h), flags=flags, borderMode=border)
+
+
 def preprocess_plate(bgr: np.ndarray) -> list[np.ndarray]:
     """
     Return several preprocessed grayscale variants of the plate crop.
@@ -43,8 +84,13 @@ def preprocess_plate(bgr: np.ndarray) -> list[np.ndarray]:
             [2] otsu_dark        – dark text on white background (inverted)
             [3] adaptive         – handles uneven illumination plates
             [4] morph_close      – fills thin broken character strokes
+
+        All variants are deskewed first to correct plate tilt.
     """
     bgr = _upscale(bgr, 300)
+
+    # Deskew before grayscale conversion so all variants benefit
+    bgr = _deskew(bgr)
 
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
@@ -475,9 +521,9 @@ def read_plate(
             candidates.append((raw, clean_plate(raw), conf))
             candidates.extend(_expand_candidate(raw, conf))
 
-    # Tesseract passes (sharpened + Otsu only, for speed)
+    # Tesseract passes — run on all 5 preprocessed variants for maximum coverage
     if use_tesseract:
-        for img_variant in imgs[:2]:
+        for img_variant in imgs:
             raw, conf = _tesseract_read(img_variant)
             if raw.strip():
                 candidates.append((raw, clean_plate(raw), conf))

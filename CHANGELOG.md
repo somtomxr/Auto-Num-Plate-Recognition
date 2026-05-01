@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] – 2026-05-01
+
+### Added
+- ✨ FastAPI REST API (`api.py`) with `/predict`, `/predict/batch`, and `/health` endpoints
+- ✨ Docker containerization (`Dockerfile`, `docker-compose.yml`, `.dockerignore`)
+- ✨ Both Streamlit app and REST API run as separate Docker services
+- ✨ Deskew preprocessing (`_deskew`) — auto-corrects plate tilt up to ±15° before OCR
+- ✨ Full pipeline benchmark script + automated val labels builder
+- ✨ `evaluation/val_labels.csv` with ground-truth plates for 339 images
+
+### Improved
+- 🔧 Tesseract now runs on all 5 preprocessing variants (was 2) for higher recall
+- 🔧 `requirements.txt` updated with FastAPI, uvicorn, pydantic, pytesseract
+- 🔧 `RESULTS.md` now contains real benchmark metrics (not placeholders)
+- 🔧 Resume updated with benchmarked numbers: 0.994 mAP@50, 97.1% detection rate
+
+### Benchmark Results (v1.3.0)
+- Test set: 339 labeled Indian plate images
+- Plate detection rate: 97.1% (YOLO fine-tuned on 1,698 images, mAP@50 = 0.994)
+- Valid Indian-format prediction rate: 62.8%
+- Processing speed: ~1.5 s/image on CPU
+
+---
+
 ## [1.2.0] – 2026-04-12
 
 ### Added
@@ -86,11 +110,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Real-time webcam feed support
 - [ ] Multi-language OCR (Hindi, Marathi, Tamil)
 - [ ] Database backend for plate history
-- [ ] REST API wrapper
+- [x] REST API wrapper ✅ done in v1.3.0
 - [ ] Mobile app (React Native / Flutter)
-- [ ] Docker containerization
+- [x] Docker containerization ✅ done in v1.3.0
 - [ ] Fine-tuned YOLOv11 models per region
-- [ ] Performance benchmarking suite
+- [x] Performance benchmarking suite ✅ done in v1.3.0
 - [ ] Plate anonymization for privacy
 
 ---

@@ -25,6 +25,8 @@ pip-delete-this-directory.txt
 
 # ML Models & Data
 # best.pt is intentionally tracked (18 MB, needed for Streamlit Cloud)
+best_old.pt
+yolo11n.pt
 *.pth
 *.onnx
 *.h5
@@ -34,6 +36,15 @@ datasets/
 sample_images/
 test_images/
 output_videos/
+evaluation/*.csv
+evaluation/*.json
+evaluation/*.txt
+failure_samples/*.jpg
+failure_samples/*.jpeg
+failure_samples/*.png
+failure_samples/*.bmp
+failure_samples/*.webp
+failure_samples/labels.csv
 
 # Streamlit
 .streamlit/secrets.toml
@@ -42,6 +53,7 @@ output_videos/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+!ANPR_YOLO_Training_Walkthrough.ipynb
 
 # OS
 .DS_Store

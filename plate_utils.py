@@ -48,19 +48,20 @@ STATE_CODES: frozenset[str] = frozenset({
     "SK", "TG", "TN", "TR", "TS", "UK", "UP", "WB",
 })
 
-# Plate format regexes
-_PLATE_PATTERNS: list[re.Pattern] = [
+# Plate format regexes. State-prefixed formats are checked together with
+# STATE_CODES in is_valid_indian_plate().
+_STATE_PLATE_PATTERNS: list[re.Pattern] = [
     # Standard modern: MH12AB1234
     re.compile(r"^[A-Z]{2}\d{2}[A-Z]{2}\d{4}$"),
     # Single-series:   MH12A1234
     re.compile(r"^[A-Z]{2}\d{2}[A-Z]\d{4}$"),
     # Three-letter:    MH12ABC1234
     re.compile(r"^[A-Z]{2}\d{2}[A-Z]{3}\d{4}$"),
-    # BH series:       22BH1234AA  or  22BH1234A
-    re.compile(r"^\d{2}BH\d{4}[A-Z]{1,2}$"),
-    # Old short:       MH12AB123
+    # Old short / partial but plausible: MH12AB123
     re.compile(r"^[A-Z]{2}\d{2}[A-Z]{1,3}\d{1,3}$"),
 ]
+
+_BH_PLATE_PATTERN = re.compile(r"^\d{2}BH\d{4}[A-Z]{1,2}$")
 
 
 def _to_letter(ch: str) -> str:
@@ -179,7 +180,13 @@ def is_valid_indian_plate(plate: str) -> bool:
     """Return True if plate matches a known Indian plate format."""
     cleaned = re.sub(r"[^A-Z0-9]", "", plate.upper())
 
-    for pat in _PLATE_PATTERNS:
+    if _BH_PLATE_PATTERN.match(cleaned):
+        return True
+
+    if len(cleaned) < 2 or cleaned[:2] not in STATE_CODES:
+        return False
+
+    for pat in _STATE_PLATE_PATTERNS:
         if pat.match(cleaned):
             return True
 
@@ -199,6 +206,9 @@ def is_valid_indian_plate(plate: str) -> bool:
 def format_plate(plate: str) -> str:
     """Return a human-readable formatted plate string, e.g. 'MH 12 AB 1234'."""
     p = re.sub(r"[^A-Z0-9]", "", plate.upper())
+    if _BH_PLATE_PATTERN.match(p):
+        # 22 BH 1234 AA
+        return f"{p[:2]} {p[2:4]} {p[4:8]} {p[8:]}"
     if len(p) == 11:
         # MH 12 ABC 1234
         return f"{p[:2]} {p[2:4]} {p[4:7]} {p[7:]}"

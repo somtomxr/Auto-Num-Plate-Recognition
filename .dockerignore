@@ -1,0 +1,41 @@
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Large dataset files (not needed in container) ─────────────────────────────
+datasets/
+runs/
+*.zip
+
+# ── Backup model (only ship best.pt) ──────────────────────────────────────────
+best_old.pt
+
+# ── Test artifacts ─────────────────────────────────────────────────────────────
+.pytest_cache/
+tests/__pycache__/
+.ipynb_checkpoints/
+
+# ── IDE and OS files ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# ── Git ────────────────────────────────────────────────────────────────────────
+.git/
+.github/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env
+*.env
+
+# ── Temp / context PDFs ───────────────────────────────────────────────────────
+*.pdf

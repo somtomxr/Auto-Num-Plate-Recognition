@@ -1,6 +1,6 @@
 # 🇮🇳 Indian ANPR System – Automatic Number Plate Recognition
 
-> **YOLOv11 + EasyOCR + Tesseract** for high-accuracy detection and recognition of Indian license plates (Standard, HSRP, 2-Line, BH-Series).
+> **YOLOv11 + EasyOCR + Tesseract** pipeline for Indian license plate detection and recognition (Standard, HSRP, 2-Line, BH-Series), with evidence-first benchmarking support.
 
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B?style=flat&logo=streamlit)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat&logo=python)
@@ -35,6 +35,11 @@ License-Plate-Recognition-app/
 ├── app.py                      # Streamlit web UI
 ├── ocr_engine.py               # Core OCR pipeline & YOLO integration
 ├── plate_utils.py              # Plate format validation & cleaning
+├── scripts/
+│   └── benchmark_anpr.py        # Local benchmark runner for resume-safe metrics
+├── tests/
+│   └── test_plate_utils.py      # Unit tests for validation/cleanup logic
+├── RESULTS.md                   # Evidence-first results log
 ├── best.pt                     # YOLOv11 pre-trained model weights
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # This file
@@ -93,13 +98,30 @@ pip install -r requirements.txt
 
 ## 🎯 Quick Start
 
-### Run the Web App
+### Option 1: Run with Docker (Recommended)
+The easiest way to run both the Streamlit app and the REST API without installing Python dependencies locally.
+
+```bash
+docker-compose up
+```
+- Web UI: `http://localhost:8501`
+- REST API: `http://localhost:8000/docs`
+
+### Option 2: Run Locally (Manual)
+
+#### Run the Web App
 ```bash
 cd License-Plate-Recognition-app
 streamlit run app.py
 ```
-
 The app will launch at `http://localhost:8501`
+
+#### Run the REST API
+```bash
+cd License-Plate-Recognition-app
+uvicorn api:app --host 0.0.0.0 --port 8000
+```
+Interactive API documentation will be available at `http://localhost:8000/docs`
 
 ### Image Detection
 1. Open the **Image** tab
@@ -147,7 +169,8 @@ The app will launch at `http://localhost:8501`
 ### Detection Pipeline
 1. **YOLO Inference**: Detects plate ROIs at 640×640, yielding bounding boxes
 2. **Crop + Padding**: Extracts plate region with extra margin to preserve edge digits
-3. **Preprocess**: 5-variant preprocessing (CLAHE, bilateral filter, Otsu, adaptive, morphology)
+3. **Deskew**: Auto-detects and corrects plate rotation (up to ±15°) before OCR
+4. **Preprocess**: 5-variant preprocessing (CLAHE, bilateral filter, Otsu, adaptive, morphology)
 
 ### OCR Pipeline
 1. **Candidate Generation**:
@@ -229,17 +252,37 @@ print(found)
 
 ---
 
-## ⚡ Performance
+## ⚡ Benchmarking & Results
 
-| Metric | Value |
-|--------|-------|
-| **Image Detection** | ~1–3 seconds (CPU) |
-| **Video (per frame)** | ~100–200ms (CPU) |
-| **GPU Acceleration** | 3–5× faster |
-| **Accuracy (Standard Plates)** | 94–98% (good lighting) |
-| **Accuracy (Two-Line HSRP)** | 88–96% (with auto-split) |
+This repository is set up to avoid unsupported accuracy claims. Use the benchmark
+script on a documented image set, then record measured results in `RESULTS.md`.
 
-*Times depend on hardware, image resolution, and preprocessing complexity.*
+```bash
+python3 scripts/benchmark_anpr.py path/to/images --labels path/to/labels.csv
+```
+
+Optional labels CSV:
+
+```csv
+filename,plate
+car_001.jpg,MH12AB1234
+car_002.jpg,22BH1234AA
+```
+
+The script writes:
+
+- `evaluation/benchmark_predictions.csv`
+- `evaluation/benchmark_summary.json`
+
+Recommended resume-safe metrics after a benchmark run:
+
+- number of test images
+- device used (CPU/GPU, OS, Python version)
+- average processing time per readable image
+- valid prediction rate
+- exact-match rate if labels are provided
+
+See [RESULTS.md](RESULTS.md) for the current evidence log and claim template.
 
 ---
 

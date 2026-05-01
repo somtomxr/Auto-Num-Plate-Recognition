@@ -1,0 +1,4 @@
+filename,actual_plate,problem_type,notes
+car_001.jpg,MH12AB1234,no_detection,plate visible but YOLO missed it
+car_002.jpg,DL01CA5678,wrong_ocr,detected but OCR text was wrong
+car_003.jpg,UP16AB1234,works,clear image and correct output
