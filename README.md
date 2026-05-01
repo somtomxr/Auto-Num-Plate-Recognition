@@ -387,5 +387,9 @@ For issues or questions:
 ---
 
 **Last Updated**: April 2026  
-**Status**: ✅ Production Ready
-Built with ❤️ using Python, OpenCV, YOLOv11n, EasyOCR, and Streamlit
+**Status**: ✅ Production Ready  
+<br>
+<p align="center">
+  <b>Built with ❤️ by Som Tomar</b><br>
+  <i>Powered by Python, OpenCV, YOLO11, EasyOCR, FastAPI, and Streamlit</i>
+</p>
