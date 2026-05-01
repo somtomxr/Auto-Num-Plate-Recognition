@@ -210,9 +210,9 @@ with st.sidebar:
     st.markdown("**System Status**")
     try:
         import requests
-        res = requests.get("http://localhost:8000/health", timeout=1)
+        res = requests.get("https://anpr-api-r1ym.onrender.com/health", timeout=1.5)
         if res.status_code == 200:
-            st.markdown("🟢 **REST API:** [Online & Ready](http://localhost:8000/docs)")
+            st.markdown("🟢 **REST API:** [Online & Ready](https://anpr-api-r1ym.onrender.com/docs)")
         else:
             st.markdown("🔴 **REST API:** Error")
     except Exception:
