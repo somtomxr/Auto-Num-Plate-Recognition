@@ -212,7 +212,7 @@ with st.sidebar:
         import requests
         res = requests.get("http://localhost:8000/health", timeout=1)
         if res.status_code == 200:
-            st.markdown("🟢 **REST API:** Online")
+            st.markdown("🟢 **REST API:** [Online & Ready](http://localhost:8000/docs)")
         else:
             st.markdown("🔴 **REST API:** Error")
     except Exception:
