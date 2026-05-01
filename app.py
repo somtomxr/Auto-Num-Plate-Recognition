@@ -240,40 +240,51 @@ st.divider()
 tab_img, tab_vid = st.tabs(["📷 Image", "🎬 Video"])
 
 with tab_img:
-    col_up, col_res = st.columns(2, gap="large")
-    with col_up:
-        st.markdown('<div class="sec-hdr">Input Image</div>', unsafe_allow_html=True)
-        img_file = st.file_uploader("Drag & drop", type=["jpg", "jpeg", "png", "bmp"],
-                                      key="img_upload")
-        if img_file:
-            st.image(Image.open(img_file), use_container_width=True)
-            img_file.seek(0)
-    with col_res:
-        st.markdown('<div class="sec-hdr">Detection</div>', unsafe_allow_html=True)
-        if img_file:
-            if st.button("🔍 Detect", type="primary", use_container_width=True):
-                raw_bytes = img_file.read()
-                bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
-                with st.spinner("Detecting…"):
-                    t0 = time.perf_counter()
-                    annotated, found = detect_on_frame(bgr, yolo_conf, iou_thresh,
-                                                      strict_val, use_tess)
-                    elapsed_ms = (time.perf_counter() - t0) * 1000
-                st.session_state.proc_ms.append(elapsed_ms)
-                rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                st.image(rgb, use_container_width=True)
-                if found:
-                    st.success(f"Found **{len(found)}** plate(s) in **{elapsed_ms:.0f}ms**")
-                    for det in found:
-                        st.markdown(_plate_html(**det),
-                                    unsafe_allow_html=True)
-                        if show_raw:
-                            st.caption(f"Raw: `{det['raw']}`")
-                        _log_detection(det, "image", datetime.now().strftime("%H:%M:%S"))
-                else:
-                    st.warning("No plates found.")
-        else:
-            st.info("Upload an image to begin.")
+    img_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload")
+    
+    if img_file:
+        # Create a placeholder so we can swap the image after detection
+        image_placeholder = st.empty()
+        
+        # Show the original image first
+        image_placeholder.image(Image.open(img_file), use_container_width=True)
+        img_file.seek(0)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Center the detect button nicely
+        _, btn_col, _ = st.columns([1, 2, 1])
+        with btn_col:
+            detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
+            
+        if detect_clicked:
+            raw_bytes = img_file.read()
+            bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
+            
+            with st.spinner("Detecting and Reading Plate..."):
+                t0 = time.perf_counter()
+                annotated, found = detect_on_frame(bgr, yolo_conf, iou_thresh, strict_val, use_tess)
+                elapsed_ms = (time.perf_counter() - t0) * 1000
+                
+            st.session_state.proc_ms.append(elapsed_ms)
+            rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
+            
+            # 🚀 SWAP the image: Replace the original with the scanned/annotated one
+            image_placeholder.image(rgb, use_container_width=True)
+            
+            st.divider()
+            
+            if found:
+                st.success(f"Found **{len(found)}** plate(s) in **{elapsed_ms:.0f}ms**")
+                for det in found:
+                    st.markdown(_plate_html(**det), unsafe_allow_html=True)
+                    if show_raw:
+                        st.caption(f"Raw: `{det['raw']}`")
+                    _log_detection(det, "image", datetime.now().strftime("%H:%M:%S"))
+            else:
+                st.warning("No plates found in this image. Try lowering the Detection Confidence in settings.")
+    else:
+        st.info("Upload an image to begin.")
 
 with tab_vid:
     st.markdown('<div class="sec-hdr">Input Video</div>', unsafe_allow_html=True)
