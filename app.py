@@ -205,6 +205,20 @@ with st.sidebar:
     show_raw = st.toggle("Show Raw OCR", value=False,
                          help="Shows the uncleaned text from the OCR engine before Python fixes it.")
     st.divider()
+    
+    # --- API Status Check ---
+    st.markdown("**System Status**")
+    try:
+        import requests
+        res = requests.get("http://localhost:8000/health", timeout=1)
+        if res.status_code == 200:
+            st.markdown("🟢 **REST API:** Online")
+        else:
+            st.markdown("🔴 **REST API:** Error")
+    except Exception:
+        st.markdown("🔴 **REST API:** Offline")
+        
+    st.divider()
     if st.button("🗑️ Clear Log", use_container_width=True, type="secondary"):
         st.session_state.log.clear()
         st.session_state.proc_ms.clear()
@@ -277,7 +291,7 @@ with tab_img:
         raw_bytes = img_file.read()
         bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
         
-        with col_left:
+        with col_right:
             with st.spinner("Detecting and Reading Plate..."):
                 t0 = time.perf_counter()
                 annotated, found = detect_on_frame(bgr, yolo_conf, iou_thresh, strict_val, use_tess)
