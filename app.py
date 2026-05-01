@@ -52,7 +52,7 @@ st.markdown(
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
     }
     [data-testid="stImage"] img {
-        max-height: 500px;
+        max-height: 400px;
         object-fit: contain;
     }
     [data-testid="stAlert"] {
@@ -226,27 +226,28 @@ st.divider()
 tab_img, tab_vid = st.tabs(["📷 Image", "🎬 Video"])
 
 with tab_img:
-    col_left, col_right = st.columns([1.5, 1], gap="large")
+    col_left, col_right = st.columns([1.1, 1], gap="large")
     
     with col_left:
         st.markdown('<div class="sec-hdr">Input Image</div>', unsafe_allow_html=True)
         img_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload")
         
+        # We define the placeholder here so the image always renders on the left
+        image_placeholder = st.empty()
+        
         if img_file:
-            # Placeholder for swapping image
-            image_placeholder = st.empty()
             image_placeholder.image(Image.open(img_file), use_container_width=True)
             img_file.seek(0)
             
+    with col_right:
+        st.markdown('<div class="sec-hdr">Action & Results</div>', unsafe_allow_html=True)
+        
+        if img_file:
+            detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
             st.markdown("<br>", unsafe_allow_html=True)
-            _, btn_col, _ = st.columns([1, 2, 1])
-            with btn_col:
-                detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
         else:
             detect_clicked = False
             
-    with col_right:
-        st.markdown('<div class="sec-hdr">Detection Results</div>', unsafe_allow_html=True)
         res_placeholder = st.container()
         
         st.markdown('<div class="sec-hdr" style="margin-top:30px;">Session Stats</div>', unsafe_allow_html=True)
