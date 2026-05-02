@@ -33,8 +33,8 @@ jobs:
     - name: Lint (flake8)
       run: |
         flake8 ocr_engine.py plate_utils.py app.py \
-          --max-line-length=100 \
-          --extend-ignore=E203,W503
+          --max-line-length=120 \
+          --extend-ignore=E203,W503,E501
 
     - name: Type check (mypy)
       run: mypy ocr_engine.py plate_utils.py

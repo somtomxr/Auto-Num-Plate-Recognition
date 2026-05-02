@@ -12,7 +12,6 @@ Supports:
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 # ── Character correction maps ──────────────────────────────────────────────────
 # Digits that are commonly misread as letters in positions that require letters
