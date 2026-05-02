@@ -3,6 +3,7 @@ Indian ANPR System — Streamlit App
 YOLOv11 + EasyOCR + Tesseract
 Supports: Standard · HSRP · 2-Line · BH Series
 """
+
 from __future__ import annotations
 
 import os
@@ -107,12 +108,15 @@ st.markdown(
 _BASE = Path(__file__).parent
 MODEL_PATH = _BASE / "best.pt"
 
+
 @st.cache_resource(show_spinner="Loading YOLOv11 + EasyOCR…")
 def load_models():
     import easyocr
+
     yolo_m = YOLO(str(MODEL_PATH))
     ocr_r = easyocr.Reader(["en"], gpu=False, verbose=False)
     return yolo_m, ocr_r
+
 
 yolo_model, ocr_reader = load_models()
 
@@ -121,10 +125,11 @@ if "log" not in st.session_state:
 if "proc_ms" not in st.session_state:
     st.session_state.proc_ms = []
 
-def detect_on_frame(bgr: np.ndarray, yolo_conf: float, iou_thr: float,
-                    strict: bool, use_tess: bool) -> tuple[np.ndarray, list[dict]]:
-    yolo_out = yolo_model(bgr, conf=yolo_conf, iou=iou_thr, max_det=15,
-                          imgsz=640, verbose=False)[0]
+
+def detect_on_frame(
+    bgr: np.ndarray, yolo_conf: float, iou_thr: float, strict: bool, use_tess: bool
+) -> tuple[np.ndarray, list[dict]]:
+    yolo_out = yolo_model(bgr, conf=yolo_conf, iou=iou_thr, max_det=15, imgsz=640, verbose=False)[0]
     found = []
     for box in yolo_out.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -153,27 +158,38 @@ def detect_on_frame(bgr: np.ndarray, yolo_conf: float, iou_thr: float,
         label = f"{text}  {conf * 100:.0f}%"
         (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_DUPLEX, 0.75, 2)
         cv2.rectangle(bgr, (x1, y1 - th - 14), (x1 + tw + 10, y1), color, cv2.FILLED)
-        cv2.putText(bgr, label, (x1 + 5, y1 - 6),
-                    cv2.FONT_HERSHEY_DUPLEX, 0.75, (0, 0, 0), 2)
+        cv2.putText(bgr, label, (x1 + 5, y1 - 6), cv2.FONT_HERSHEY_DUPLEX, 0.75, (0, 0, 0), 2)
         if not text:
             continue
-        found.append({"text": text, "conf": conf, "confidence": conf,
-                      "two_line": two_line, "valid": valid, "raw": raw})
+        found.append(
+            {
+                "text": text,
+                "conf": conf,
+                "confidence": conf,
+                "two_line": two_line,
+                "valid": valid,
+                "raw": raw,
+            }
+        )
     return bgr, found
+
 
 def _log_detection(det: dict, source: str, time_label: str) -> None:
     existing = {d["plate"] for d in st.session_state.log}
     conf = det.get("confidence", det.get("conf", 0.0))
     if det["text"] and det["text"] not in existing:
-        st.session_state.log.append({
-            "time": time_label,
-            "plate": det["text"],
-            "formatted": format_plate(det["text"]),
-            "confidence": conf,
-            "two_line": det["two_line"],
-            "valid": det["valid"],
-            "source": source,
-        })
+        st.session_state.log.append(
+            {
+                "time": time_label,
+                "plate": det["text"],
+                "formatted": format_plate(det["text"]),
+                "confidence": conf,
+                "two_line": det["two_line"],
+                "valid": det["valid"],
+                "source": source,
+            }
+        )
+
 
 def _plate_html(
     text: str,
@@ -187,44 +203,72 @@ def _plate_html(
         conf = confidence
     badge_cls = "plate-badge" if valid else "plate-badge-warn"
     tl_tag = '<span class="tag-2line">2-LINE</span>' if two_line else ""
-    return (f'<span class="{badge_cls}">{text}</span>'
-            f'<span class="conf-pill">{conf * 100:.1f}% conf</span>{tl_tag}')
+    return (
+        f'<span class="{badge_cls}">{text}</span>'
+        f'<span class="conf-pill">{conf * 100:.1f}% conf</span>{tl_tag}'
+    )
+
 
 with st.sidebar:
     st.markdown("<h2 style='color:#58a6ff;'>⚙️ Settings</h2>", unsafe_allow_html=True)
     st.divider()
-    yolo_conf = st.slider("Detection Confidence", 0.10, 0.90, 0.25, 0.05,
-                          help="Higher values prevent false positives (like bumpers) but may miss blurry plates.")
-    iou_thresh = st.slider("IoU Threshold", 0.10, 0.90, 0.45, 0.05,
-                           help="Prevents duplicate boxes on the same plate. 0.45 is the research standard.")
+    yolo_conf = st.slider(
+        "Detection Confidence",
+        0.10,
+        0.90,
+        0.25,
+        0.05,
+        help="Higher values prevent false positives (like bumpers) but may miss blurry plates.",
+    )
+    iou_thresh = st.slider(
+        "IoU Threshold",
+        0.10,
+        0.90,
+        0.45,
+        0.05,
+        help="Prevents duplicate boxes on the same plate. 0.45 is the research standard.",
+    )
     st.markdown("**OCR Options**")
-    use_tess = st.toggle("Dual Engine (EasyOCR + Tesseract)", value=True,
-                         help="Runs two engines for higher accuracy, but takes 2x longer.")
-    strict_val = st.toggle("Strict Indian Format", value=True,
-                           help="Hides results that do not mathematically match Indian plate rules.")
-    show_raw = st.toggle("Show Raw OCR", value=False,
-                         help="Shows the uncleaned text from the OCR engine before Python fixes it.")
+    use_tess = st.toggle(
+        "Dual Engine (EasyOCR + Tesseract)",
+        value=True,
+        help="Runs two engines for higher accuracy, but takes 2x longer.",
+    )
+    strict_val = st.toggle(
+        "Strict Indian Format",
+        value=True,
+        help="Hides results that do not mathematically match Indian plate rules.",
+    )
+    show_raw = st.toggle(
+        "Show Raw OCR",
+        value=False,
+        help="Shows the uncleaned text from the OCR engine before Python fixes it.",
+    )
     st.divider()
-    
+
     # --- API Status Check ---
     st.markdown("**System Status**")
     try:
         import requests
+
         res = requests.get("https://anpr-api-r1ym.onrender.com/health", timeout=1.5)
         if res.status_code == 200:
-            st.markdown("🟢 **REST API:** [Online & Ready](https://anpr-api-r1ym.onrender.com/docs)")
+            st.markdown(
+                "🟢 **REST API:** [Online & Ready](https://anpr-api-r1ym.onrender.com/docs)"
+            )
         else:
             st.markdown("🔴 **REST API:** Error")
     except Exception:
         st.markdown("🔴 **REST API:** Offline")
-        
+
     st.divider()
     if st.button("🗑️ Clear Log", use_container_width=True, type="secondary"):
         st.session_state.log.clear()
         st.session_state.proc_ms.clear()
         st.rerun()
 
-st.markdown("""
+st.markdown(
+    """
 <div style="display:flex; align-items:center; gap:12px;">
   <span style="font-size:2.2rem;">🇮🇳</span>
   <div>
@@ -234,39 +278,48 @@ st.markdown("""
     </p>
   </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 st.divider()
 
 tab_img, tab_vid = st.tabs(["📷 Image", "🎬 Video"])
 
 with tab_img:
     col_left, col_right = st.columns([1.1, 1], gap="large")
-    
+
     with col_left:
         st.markdown('<div class="sec-hdr">Input Image</div>', unsafe_allow_html=True)
-        img_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload")
-        
+        img_file = st.file_uploader(
+            "Upload Vehicle Image", type=["jpg", "jpeg", "png", "bmp"], key="img_upload"
+        )
+
         # We define the placeholder here so the image always renders on the left
         image_placeholder = st.empty()
-        
+
         if img_file:
             image_placeholder.image(Image.open(img_file), use_container_width=True)
             img_file.seek(0)
-            
+
     with col_right:
         st.markdown('<div class="sec-hdr">Action & Results</div>', unsafe_allow_html=True)
-        
+
         if img_file:
-            detect_clicked = st.button("🔍 Detect License Plate", type="primary", use_container_width=True)
+            detect_clicked = st.button(
+                "🔍 Detect License Plate", type="primary", use_container_width=True
+            )
             st.markdown("<br>", unsafe_allow_html=True)
         else:
             detect_clicked = False
-            
+
         res_placeholder = st.container()
-        
-        st.markdown('<div class="sec-hdr" style="margin-top:30px;">Session Stats</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="sec-hdr" style="margin-top:30px;">Session Stats</div>',
+            unsafe_allow_html=True,
+        )
         stats_placeholder = st.empty()
-        
+
     def render_stats():
         _log = st.session_state.log
         if not _log:
@@ -276,7 +329,7 @@ with tab_img:
         _nv = sum(1 for d in _log if d.get("valid"))
         _ac = float(np.mean([d["confidence"] for d in _log]) * 100)
         _ams = float(np.mean(st.session_state.proc_ms)) if st.session_state.proc_ms else 0.0
-        
+
         with stats_placeholder.container():
             c1, c2 = st.columns(2)
             c1.metric("Total Plates", _n)
@@ -286,23 +339,23 @@ with tab_img:
 
     # Initial render of the stats box
     render_stats()
-            
+
     if img_file and detect_clicked:
         raw_bytes = img_file.read()
         bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
-        
+
         with col_right:
             with st.spinner("Detecting and Reading Plate..."):
                 t0 = time.perf_counter()
                 annotated, found = detect_on_frame(bgr, yolo_conf, iou_thresh, strict_val, use_tess)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
-                
+
         st.session_state.proc_ms.append(elapsed_ms)
         rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-        
+
         # 🚀 SWAP the image: Replace the original with the scanned/annotated one
         image_placeholder.image(rgb, use_container_width=True)
-        
+
         # Fill results in the right column
         with res_placeholder:
             if found:
@@ -313,8 +366,10 @@ with tab_img:
                         st.caption(f"Raw: `{det['raw']}`")
                     _log_detection(det, "image", datetime.now().strftime("%H:%M:%S"))
             else:
-                st.warning("No plates found in this image. Try lowering the Detection Confidence in settings.")
-                
+                st.warning(
+                    "No plates found in this image. Try lowering the Detection Confidence in settings."
+                )
+
         # Instantly update stats after detection
         render_stats()
 
@@ -326,8 +381,9 @@ with tab_vid:
         frame_skip = st.slider("Skip frames", 1, 15, 4, 1)
         max_unique = st.number_input("Max plates", 1, 500, 100)
     with vid_col:
-        vid_file = st.file_uploader("Drag & drop", type=["mp4", "avi", "mov", "mkv"],
-                                     key="vid_upload")
+        vid_file = st.file_uploader(
+            "Drag & drop", type=["mp4", "avi", "mov", "mkv"], key="vid_upload"
+        )
     if vid_file and st.button("▶️ Process", type="primary", key="btn_proc_vid"):
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
         tmp.write(vid_file.read())
@@ -347,16 +403,15 @@ with tab_vid:
             frame_idx += 1
             if frame_idx % frame_skip != 0:
                 continue
-            annotated, found = detect_on_frame(frame, yolo_conf, iou_thresh,
-                                            strict_val, use_tess)
+            annotated, found = detect_on_frame(frame, yolo_conf, iou_thresh, strict_val, use_tess)
             for det in found:
                 if det["text"] and det["text"] not in seen:
                     seen.add(det["text"])
-                    new_plate.markdown(f"🆕 {_plate_html(**det)}",
-                                      unsafe_allow_html=True)
+                    new_plate.markdown(f"🆕 {_plate_html(**det)}", unsafe_allow_html=True)
                     _log_detection(det, "video", f"Frame {frame_idx}")
-            preview.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB",
-                         use_container_width=True)
+            preview.image(
+                cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB", use_container_width=True
+            )
             prog = min(frame_idx / total_frames, 1.0)
             prog_bar.progress(prog, text=f"Frame {frame_idx}/{total_frames}")
         elapsed_ms = (time.perf_counter() - t0) * 1000
@@ -375,18 +430,23 @@ if st.session_state.log:
     display_df["Conf %"] = (display_df["Conf %"] * 100).round(1)
     tbl_col, dl_col = st.columns([5, 1], gap="medium")
     with tbl_col:
-        st.dataframe(display_df, use_container_width=True,
-                    height=min(480, 60 + len(display_df) * 36))
+        st.dataframe(
+            display_df, use_container_width=True, height=min(480, 60 + len(display_df) * 36)
+        )
     with dl_col:
         st.markdown("### Export")
-        export_df = df[["time", "plate", "formatted", "confidence", "two_line", "valid",
-                        "source"]].copy()
+        export_df = df[
+            ["time", "plate", "formatted", "confidence", "two_line", "valid", "source"]
+        ].copy()
         export_df["confidence"] = (export_df["confidence"] * 100).round(2)
         export_df.columns = ["Time", "Raw", "Formatted", "Conf %", "2-Line", "Valid", "Source"]
-        st.download_button(label="⬇️ CSV",
-                          data=export_df.to_csv(index=False).encode(),
-                          file_name=f"ANPR_{datetime.now():%Y%m%d_%H%M%S}.csv",
-                          mime="text/csv", use_container_width=True)
+        st.download_button(
+            label="⬇️ CSV",
+            data=export_df.to_csv(index=False).encode(),
+            file_name=f"ANPR_{datetime.now():%Y%m%d_%H%M%S}.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
         if st.button("🗑️ Clear", use_container_width=True, type="secondary"):
             st.session_state.log.clear()
             st.session_state.proc_ms.clear()

@@ -25,6 +25,7 @@ _ALLOWLIST = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 # ── Preprocessing ──────────────────────────────────────────────────────────────
 
+
 def _upscale(img: np.ndarray, min_w: int = 300) -> np.ndarray:
     h, w = img.shape[:2]
     if w >= min_w:
@@ -112,10 +113,12 @@ def preprocess_plate(bgr: np.ndarray) -> list[np.ndarray]:
 
     # Adaptive threshold (handles gradient/shadow backgrounds)
     adaptive = cv2.adaptiveThreshold(
-        sharpened, 255,
+        sharpened,
+        255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
-        15, 3,
+        15,
+        3,
     )
 
     # Morphological close helps reconnect fragmented strokes in embossed plates.
@@ -126,6 +129,7 @@ def preprocess_plate(bgr: np.ndarray) -> list[np.ndarray]:
 
 
 # ── Two-line split detection ────────────────────────────────────────────────────
+
 
 def find_split_line(gray: np.ndarray) -> Optional[int]:
     """
@@ -187,6 +191,7 @@ def find_split_line(gray: np.ndarray) -> Optional[int]:
 
 # ── OCR helpers ─────────────────────────────────────────────────────────────────
 
+
 def _easyocr_read(gray: np.ndarray, reader) -> tuple[str, float]:
     """Run EasyOCR on a grayscale image. Returns (joined_text, mean_confidence)."""
     try:
@@ -202,7 +207,7 @@ def _easyocr_read(gray: np.ndarray, reader) -> tuple[str, float]:
             link_threshold=0.20,
             width_ths=0.70,
             height_ths=0.40,
-            adjust_contrast=0,   # we do our own contrast adjustment
+            adjust_contrast=0,  # we do our own contrast adjustment
         )
     except Exception:
         return "", 0.0
@@ -252,10 +257,7 @@ def _tesseract_read(gray: np.ndarray) -> tuple[str, float]:
     try:
         import pytesseract
 
-        _CFG = (
-            f"--oem 3 "
-            f"-c tessedit_char_whitelist={_ALLOWLIST} "
-        )
+        _CFG = f"--oem 3 " f"-c tessedit_char_whitelist={_ALLOWLIST} "
         best_text, best_conf = "", 0.0
         for psm in (6, 7, 8):
             cfg = f"{_CFG} --psm {psm}"
@@ -287,6 +289,7 @@ def _tesseract_read(gray: np.ndarray) -> tuple[str, float]:
 
 
 # ── Two-line OCR combiner ───────────────────────────────────────────────────────
+
 
 def _ocr_two_line(gray: np.ndarray, split_y: int, reader) -> tuple[str, float]:
     """
@@ -321,6 +324,7 @@ def _ocr_two_line(gray: np.ndarray, split_y: int, reader) -> tuple[str, float]:
 
 # ── Candidate scoring ───────────────────────────────────────────────────────────
 
+
 def _score(raw: str, cleaned: str, conf: float) -> float:
     """
     Score a candidate reading.
@@ -351,7 +355,9 @@ def _score(raw: str, cleaned: str, conf: float) -> float:
     # Penalize likely truncation when state+RTO prefix is present but total length is short.
     trunc_penalty = -0.35 if (n == 9 and state_bonus > 0 and cleaned[-3:].isdigit()) else 0.0
 
-    return valid_bonus + state_bonus + conf + length_bonus + tail4_bonus + tail3_bonus + trunc_penalty
+    return (
+        valid_bonus + state_bonus + conf + length_bonus + tail4_bonus + tail3_bonus + trunc_penalty
+    )
 
 
 def _prefer_complete_candidate(
@@ -423,7 +429,7 @@ def _expand_candidate(raw: str, conf: float) -> list[tuple[str, str, float]]:
         for rtrim in range(0, 3):
             if ltrim + rtrim >= len(src):
                 continue
-            v = src[ltrim: len(src) - rtrim if rtrim else len(src)]
+            v = src[ltrim : len(src) - rtrim if rtrim else len(src)]
             if len(v) < 7:
                 continue
             cleaned = clean_plate(v)
@@ -469,6 +475,7 @@ def _expand_missing_tail_zero(
 
 # ── Main entry point ────────────────────────────────────────────────────────────
 
+
 def read_plate(
     crop_bgr: np.ndarray,
     reader,
@@ -497,10 +504,10 @@ def read_plate(
     """
     # 1. Preprocess ──────────────────────────────────────────────────────────────
     imgs = preprocess_plate(crop_bgr)
-    primary_gray = imgs[0]   # CLAHE-sharpened (best general reference)
+    primary_gray = imgs[0]  # CLAHE-sharpened (best general reference)
 
     # 2. Two-line detection ──────────────────────────────────────────────────────
-    split_y  = find_split_line(primary_gray)
+    split_y = find_split_line(primary_gray)
     two_line = split_y is not None
 
     # 3. Collect OCR candidates ──────────────────────────────────────────────────
@@ -550,8 +557,8 @@ def read_plate(
     _, best_raw, best_cleaned, best_conf = scored[best_idx]
 
     return {
-        "text":       best_cleaned,
+        "text": best_cleaned,
         "confidence": round(best_conf, 4),
-        "two_line":   two_line,
-        "raw":        best_raw,
+        "two_line": two_line,
+        "raw": best_raw,
     }

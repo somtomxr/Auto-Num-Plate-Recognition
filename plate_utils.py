@@ -41,12 +41,48 @@ _LETTER_TO_DIGIT: dict[str, str] = {
 }
 
 # All valid Indian state / UT codes (ISO 3166-2:IN)
-STATE_CODES: frozenset[str] = frozenset({
-    "AN", "AP", "AR", "AS", "BR", "CG", "CH", "DD", "DL", "DN",
-    "GA", "GJ", "HP", "HR", "JH", "JK", "KA", "KL", "LA", "LD",
-    "MH", "ML", "MN", "MP", "MZ", "NL", "OD", "PB", "PY", "RJ",
-    "SK", "TG", "TN", "TR", "TS", "UK", "UP", "WB",
-})
+STATE_CODES: frozenset[str] = frozenset(
+    {
+        "AN",
+        "AP",
+        "AR",
+        "AS",
+        "BR",
+        "CG",
+        "CH",
+        "DD",
+        "DL",
+        "DN",
+        "GA",
+        "GJ",
+        "HP",
+        "HR",
+        "JH",
+        "JK",
+        "KA",
+        "KL",
+        "LA",
+        "LD",
+        "MH",
+        "ML",
+        "MN",
+        "MP",
+        "MZ",
+        "NL",
+        "OD",
+        "PB",
+        "PY",
+        "RJ",
+        "SK",
+        "TG",
+        "TN",
+        "TR",
+        "TS",
+        "UK",
+        "UP",
+        "WB",
+    }
+)
 
 # Plate format regexes. State-prefixed formats are checked together with
 # STATE_CODES in is_valid_indian_plate().
@@ -83,8 +119,7 @@ def _repair_state_prefix(plate: str) -> str:
 
     # If OCR is off by one character, snap to the closest known state code.
     nearest = [
-        code for code in STATE_CODES
-        if sum(1 for i in range(2) if code[i] != prefix[i]) <= 1
+        code for code in STATE_CODES if sum(1 for i in range(2) if code[i] != prefix[i]) <= 1
     ]
     if len(nearest) == 1:
         return nearest[0] + plate[2:]
@@ -109,8 +144,8 @@ def clean_plate(raw: str) -> str:
 
     # Normalise
     p = raw.upper().strip()
-    p = re.sub(r"\bIND\b", "", p)        # strip embossed IND
-    p = re.sub(r"[^A-Z0-9]", "", p)     # keep only alphanumerics
+    p = re.sub(r"\bIND\b", "", p)  # strip embossed IND
+    p = re.sub(r"[^A-Z0-9]", "", p)  # keep only alphanumerics
     p = p.strip()
 
     if len(p) < 4:
@@ -159,7 +194,7 @@ def clean_plate(raw: str) -> str:
     # Total length → 9 (1-series), 10 (2-series), 11 (3-series)
     # Reliable rule: the last 4 characters are always the registration number (digits)
     if n >= 9:
-        series_end = n - 4   # exclusive index — last 4 are digits
+        series_end = n - 4  # exclusive index — last 4 are digits
         series_end = max(5, min(series_end, 7))  # clamp: series is 1–3 chars
         for i in range(4, series_end):
             chars[i] = _to_letter(chars[i])
