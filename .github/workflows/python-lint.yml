@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install black flake8 mypy pytest
+        pip install "black==24.8.0" flake8 mypy pytest
 
     - name: Format check (black)
       run: black --check ocr_engine.py plate_utils.py app.py
